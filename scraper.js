@@ -8,22 +8,22 @@ function initDatabase(callback) {
 	// Set up sqlite database.
 	var db = new sqlite3.Database("data.sqlite");
 	db.serialize(function() {
-		db.run("CREATE TABLE IF NOT EXISTS data (name TEXT, price REAL, area REAL, location TEXT, url TEXT, photo TEXT)");
+		db.run("CREATE TABLE IF NOT EXISTS data (ident TEXT, name TEXT, price REAL, area REAL, location TEXT, url TEXT, photo TEXT)");
 		callback(db);
 	});
 }
 
-function updateRow(db, name, price, area, location, url, photo) {
+function updateRow(db, ident, name, price, area, location, url, photo) {
 	// Insert some data.
-	var statement = db.prepare("INSERT INTO data VALUES (?, ?, ?, ?, ?, ?)");
-	statement.run(name, price, area, location, url, photo);
+	var statement = db.prepare("INSERT INTO data VALUES (?, ?, ?, ?, ?, ?, ?)");
+	statement.run(ident, name, price, area, location, url, photo);
 	statement.finalize();
 }
 
 function readRows(db) {
 	// Read some data.
-	db.each("SELECT rowid AS id, name, price, area, location, url, photo FROM data", function(err, row) {
-		console.log(row.id + ": " + row.name);
+	db.each("SELECT rowid AS id, ident, name, price, area, location, url, photo FROM data", function(err, row) {
+		console.log(row.ident + ": " + row.name);
 	});
 }
 
@@ -47,26 +47,29 @@ function run(db) {
 
 		var elements = $("#inzeraty div.inzerat").each(function (i,el) {
             var $el = $(el)
+            var ident = $el.attr("id")
             var $headLink = $el.find(".advertisement-head h2>a")
             var $content = $el.find(".inzerat-content")
 
             var name = $headLink.text()
             var price = parseFloat(
                 $el
-                .find(".advertisement-rightpanel cena span.red")
+                .find(".cena span.red")
+                .first()
                 .text()
                 .replace(/\D/g,'')
             )
             var area = parseFloat(
                 $content
                 .find(".estate-area span.red")
+                .first()
                 .text().replace(/\D/g,'')
             )
             var location = $content.find(".locationText").text() || 'missing location'
             var url = $headLink.attr("href")
             var photo = $el.find(".advertisement-photo img").attr("data-src") || 'no-photo' 
 
-			updateRow(db, name, price, area, location, url, photo);
+			updateRow(db, ident, name, price, area, location, url, photo);
 		});
 
 		readRows(db);
