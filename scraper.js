@@ -8,21 +8,21 @@ function initDatabase(callback) {
 	// Set up sqlite database.
 	var db = new sqlite3.Database("data.sqlite");
 	db.serialize(function() {
-		db.run("CREATE TABLE IF NOT EXISTS data (name TEXT, price REAL, area REAL, location TEXT, photo TEXT)");
+		db.run("CREATE TABLE IF NOT EXISTS data (name TEXT, price REAL, area REAL, location TEXT, url TEXT, photo TEXT)");
 		callback(db);
 	});
 }
 
-function updateRow(db, name, price, area, location, photo) {
+function updateRow(db, name, price, area, location, url, photo) {
 	// Insert some data.
-	var statement = db.prepare("INSERT INTO data VALUES (?, ?, ?, ?, ?)");
-	statement.run(name, price, area, location, photo);
+	var statement = db.prepare("INSERT INTO data VALUES (?, ?, ?, ?, ?, ?)");
+	statement.run(name, price, area, location, url, photo);
 	statement.finalize();
 }
 
 function readRows(db) {
 	// Read some data.
-	db.each("SELECT rowid AS id, name, price, area, location, photo FROM data", function(err, row) {
+	db.each("SELECT rowid AS id, name, price, area, location, url, photo FROM data", function(err, row) {
 		console.log(row.id + ": " + row.name);
 	});
 }
@@ -51,13 +51,22 @@ function run(db) {
             var $content = $el.find(".inzerat-content")
 
             var name = $headLink.text()
-            var url = $headLink.attr("href")
+            var price = parseFloat(
+                $el
+                .find(".advertisement-rightpanel cena span.red")
+                .text()
+                .replace(/\D/g,'')
+            )
+            var area = parseFloat(
+                $content
+                .find(".estate-area span.red")
+                .text().replace(/\D/g,'')
+            )
             var location = $content.find(".locationText").text() || 'missing location'
-            var area = $content.find(".estate-area span.red").text() || 0
-            var price = $el.find(".advertisement-rightpanel cena span.red").text().replace(/\D/g,'')
+            var url = $headLink.attr("href")
             var photo = $el.find(".advertisement-photo img").attr("data-src") || 'no-photo' 
 
-			updateRow(db, name, url, photo, price, area, location);
+			updateRow(db, name, price, area, location, url, photo);
 		});
 
 		readRows(db);
